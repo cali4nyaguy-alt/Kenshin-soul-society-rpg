@@ -1,284 +1,270 @@
 import React from 'react';
-import { BaseStage, StageProps } from './BaseStage';
+import {
+  StageBase,
+  InitialData,
+  Message,
+  DEFAULT_LOAD_RESPONSE,
+  DEFAULT_RESPONSE,
+} from '@chub-ai/stages-ts';
 
-type TagChange = {
-  rawTag: string;
-  statKey: string;
-  target?: string;
-  delta: number;
-  isPercent: boolean;
-  appliedTo?: string;
-  before?: number;
-  after?: number;
+// ---- Public types ----------------------------------------------------------
+
+export type PartyMember = {
+  name: string;
+  hp: number;
+  maxHp: number;
+  portrait: string;
 };
 
-type ParseSummary = {
-  changes: TagChange[];
+export type RPGInternalState = {
+  numChars: number;
+  numUsers: number;
+  hp: number;
+  bloodlust: number;
+  kan: number;
+  respect: number;
+  location: string;
+  sword_condition: string;
+  sword_type: string;
+  is_bankai_active: boolean;
+  is_night_scene: boolean;
+  active_cutaway_id: string | null;
+  party: PartyMember[];
+  romance: Record<string, number>;
 };
 
-export default class Stage extends BaseStage {
-  constructor(props: StageProps) {
-    super(props);
+export type ParseSummary = {
+  applied: string[];
+  errors: string[];
+};
+
+// Numeric-only stats stored on myInternalState that can be targeted by RPG tags.
+type CoreNumericStat = 'hp' | 'kan' | 'bloodlust' | 'respect';
+
+// ---- Stage class -----------------------------------------------------------
+
+/***
+ The main Kenshin Soul Society RPG stage.
+ Extends StageBase from @chub-ai/stages-ts (single InitialData constructor arg).
+ Implements all required abstract methods and the RPG state / tag-parsing logic.
+***/
+export class Stage extends StageBase<RPGInternalState, Record<string, never>, Record<string, never>, Record<string, never>> {
+  myInternalState: RPGInternalState;
+
+  constructor(data: InitialData<RPGInternalState, Record<string, never>, Record<string, never>, Record<string, never>>) {
+    super(data);
 
     // --- INTERNAL STATE (The Brain) ---
-    this.myInternalState['numChars'] = 0;
-    this.myInternalState['numUsers'] = 0;
-    
-    // Core Kenshin Stats
-    this.myInternalState['hp'] = 100;
-    this.myInternalState['bloodlust'] = 0;
-    this.myInternalState['kan'] = 0;
-    this.myInternalState['respect'] = 0;
-    
-    // World & Progression State
-    this.myInternalState['location'] = 'karakura_town'; 
-    this.myInternalState['sword_condition'] = 'oversized_sealed';
-    this.myInternalState['sword_type'] = 'reverse_blade';
-    this.myInternalState['is_bankai_active'] = false;
-    this.myInternalState['is_night_scene'] = false;
-    this.myInternalState['active_cutaway_id'] = null;
+    this.myInternalState = {
+      numChars: 0,
+      numUsers: 0,
 
-    // The Squad (The HUD)
-    this.myInternalState['party'] = [
-      { name: 'Kenshin', hp: 100, maxHp: 100, portrait: 'kenshin_neutral' },
-      { name: 'Slot 2', hp: 0, maxHp: 100, portrait: 'empty' },
-      { name: 'Slot 3', hp: 0, maxHp: 100, portrait: 'empty' }
-    ];
+      // Core Kenshin Stats
+      hp: 100,
+      bloodlust: 0,
+      kan: 0,
+      respect: 0,
 
-    // Romance System
-    this.myInternalState['romance'] = {
-      'orihime': 0,
-      'rukia': 0,
-      'rangiku': 0
+      // World & Progression State
+      location: 'karakura_town',
+      sword_condition: 'oversized_sealed', // Starts as "big ass sword"
+      sword_type: 'reverse_blade',
+      is_bankai_active: false,
+      is_night_scene: false,
+      active_cutaway_id: null, // e.g., 'kenpachi_fight', 'bankai_flash'
+
+      // The Squad (The HUD)
+      party: [
+        { name: 'Kenshin', hp: 100, maxHp: 100, portrait: 'kenshin_neutral' },
+        { name: 'Slot 2', hp: 0, maxHp: 100, portrait: 'empty' },
+        { name: 'Slot 3', hp: 0, maxHp: 100, portrait: 'empty' },
+      ],
+
+      // Romance System
+      romance: {
+        orihime: 0,
+        rukia: 0,
+        rangiku: 0,
+      },
     };
   }
 
-  // Helper for Background Logic
-  getBackgroundImage() {
-    const locs: { [key: string]: string } = {
-      'karakura_town': 'url_to_karakura_img',
-      'squad_4_hospital': 'url_to_hospital_img',
-      'seireitei': 'url_to_seireitei_img',
-      'hueco_mundo': 'url_to_hueco_mundo_img'
-    };
-    return locs[this.myInternalState['location']] || '';
+  // ---- Required abstract method implementations --------------------------
+
+  async load() {
+    return { ...DEFAULT_LOAD_RESPONSE };
   }
 
-  // --------------------
-  // Hidden-tag parsing API
-  // --------------------
-  private static tagToKeyMap: { [k: string]: string } = {
-    HP: 'hp',
-    KAN: 'kan',
-    BLOODLUST: 'bloodlust',
-    RESPECT: 'respect'
-    // add more mappings as needed
+  async setState(state: any) {
+    if (state != null) {
+      Object.assign(this.myInternalState, state);
+    }
+  }
+
+  async beforePrompt(_inputMessage: Message) {
+    return { ...DEFAULT_RESPONSE };
+  }
+
+  async afterResponse(botMessage: Message) {
+    const hidden = (botMessage as any).hidden as string | undefined;
+    if (hidden) {
+      this.handleAIResponse({ text: botMessage.content, hidden });
+    }
+    return { ...DEFAULT_RESPONSE };
+  }
+
+  // ---- Typed accessor for core numeric stats -----------------------------
+
+  private static readonly CORE_MAX_VALUES: Record<CoreNumericStat, number> = {
+    hp: 100,
+    kan: 100,
+    bloodlust: 100,
+    respect: 100,
   };
 
-  private clamp(value: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, value));
+  private getCoreStat(key: CoreNumericStat): number {
+    return this.myInternalState[key];
   }
 
+  private setCoreStat(key: CoreNumericStat, value: number): void {
+    this.myInternalState[key] = value;
+  }
+
+  private isCoreNumericStat(key: string): key is CoreNumericStat {
+    return key in Stage.CORE_MAX_VALUES;
+  }
+
+  // ---- parseHiddenTags ---------------------------------------------------
+
   /**
-   * parseHiddenTags
-   * Scans hiddenText for tags like [HP-10], [KAN+50], [HP-10%], [KENSIN_HP-10]
-   * Applies updates to myInternalState and party members when applicable.
+   * Scans the AI's hidden message text for RPG tags and applies them.
+   *
+   * Supported formats:
+   *   [STAT+N]      e.g. [KAN+50]        – add N to core stat
+   *   [STAT-N]      e.g. [HP-10]         – subtract N from core stat
+   *   [STAT-N%]     e.g. [HP-10%]        – subtract N% of max from core stat
+   *   [NAME_STAT-N] e.g. [KENSHIN_HP-10] – apply delta to a named party member
+   *
+   * Core stats recognised: HP, KAN, BLOODLUST, RESPECT.
+   * All values are clamped to [0, max].
+   *
+   * @returns A ParseSummary describing applied changes and any errors.
    */
   parseHiddenTags(hiddenText: string): ParseSummary {
-    const changes: TagChange[] = [];
-    if (!hiddenText || typeof hiddenText !== 'string') return { changes };
+    const summary: ParseSummary = { applied: [], errors: [] };
 
-    const regex = /\[([A-Z0-9_]+)([+-])([0-9]+)(%)?\]/gi;
+    // Optional NAME_ prefix, then STAT, then +/- delta, optional %
+    const tagPattern =
+      /\[(?:([A-Z][A-Z0-9]*)_)?([A-Z][A-Z0-9]*)([+-])(\d+(?:\.\d+)?)(%?)\]/g;
+
+    const coreMaxValues = Stage.CORE_MAX_VALUES;
+
     let match: RegExpExecArray | null;
+    while ((match = tagPattern.exec(hiddenText)) !== null) {
+      const [fullTag, charPrefix, statName, sign, rawValue, pct] = match;
+      const delta = parseFloat(rawValue) * (sign === '+' ? 1 : -1);
+      const isPercent = pct === '%';
 
-    while ((match = regex.exec(hiddenText)) !== null) {
-      const fullTag = match[0];
-      const keyPart = match[1];
-      const sign = match[2];
-      const numStr = match[3];
-      const isPercent = !!match[4];
-
-      const rawValue = parseInt(numStr, 10);
-      const deltaSigned = (sign === '+' ? 1 : -1) * rawValue;
-
-      // Handle target like NAME_STAT (split by last underscore)
-      let targetName: string | undefined;
-      let statKeyRaw = keyPart;
-      if (keyPart.includes('_')) {
-        const idx = keyPart.lastIndexOf('_');
-        targetName = keyPart.slice(0, idx);
-        statKeyRaw = keyPart.slice(idx + 1);
-      }
-
-      const statKeyUpper = statKeyRaw.toUpperCase();
-      const mappedKey =
-        Stage.tagToKeyMap[statKeyUpper] || statKeyUpper.toLowerCase();
-
-      const change: TagChange = {
-        rawTag: fullTag,
-        statKey: mappedKey,
-        target: targetName,
-        delta: deltaSigned,
-        isPercent
-      };
-
-      try {
-        if (targetName) {
-          const party: any[] = this.myInternalState['party'] || [];
-          const targetNormalized = targetName.toLowerCase();
-          const member = party.find(
-            (m) => (m.name || '').toString().toLowerCase() === targetNormalized
+      if (charPrefix) {
+        // Party member stat (e.g. [KENSHIN_HP-10])
+        const member = this.myInternalState.party.find(
+          (m) => m.name.toLowerCase() === charPrefix.toLowerCase(),
+        );
+        if (!member) {
+          summary.errors.push(
+            `Unknown party member "${charPrefix}" in tag ${fullTag}`,
           );
-          if (member) {
-            if (mappedKey === 'hp') {
-              const before = Number(member.hp ?? 0);
-              let deltaAmount = isPercent
-                ? Math.round((deltaSigned / 100) * Number(member.maxHp ?? before))
-                : deltaSigned;
-              const after = this.clamp(before + deltaAmount, 0, Number(member.maxHp ?? before));
-              member.hp = after;
-              change.appliedTo = `party:${member.name}`;
-              change.before = before;
-              change.after = after;
-            } else {
-              const before = Number(member[mappedKey] ?? 0);
-              const deltaAmount = isPercent ? Math.round((deltaSigned / 100) * (before || 1)) : deltaSigned;
-              const after = before + deltaAmount;
-              member[mappedKey] = after;
-              change.appliedTo = `party:${member.name}`;
-              change.before = before;
-              change.after = after;
-            }
-          } else {
-            change.appliedTo = 'not_found';
-          }
-        } else {
-          // Apply to global myInternalState
-          const currentVal = this.myInternalState[mappedKey];
-          if (mappedKey === 'hp') {
-            const before = Number(currentVal ?? 0);
-            const baseForPercent = Number(this.myInternalState?.party?.[0]?.maxHp ?? before);
-            const deltaAmount = isPercent
-              ? Math.round((deltaSigned / 100) * baseForPercent)
-              : deltaSigned;
-            const after = this.clamp(before + deltaAmount, 0, baseForPercent);
-            this.myInternalState[mappedKey] = after;
-
-            if (this.myInternalState?.party?.length > 0) {
-              const member = this.myInternalState.party[0];
-              const beforeMember = Number(member.hp ?? 0);
-              member.hp = this.clamp(beforeMember + deltaAmount, 0, Number(member.maxHp ?? beforeMember));
-            }
-
-            change.appliedTo = 'global';
-            change.before = before;
-            change.after = after;
-          } else if (mappedKey === 'bloodlust') {
-            const before = Number(currentVal ?? 0);
-            const deltaAmount = isPercent ? Math.round((deltaSigned / 100) * (before || 100)) : deltaSigned;
-            const after = this.clamp(before + deltaAmount, 0, 100);
-            this.myInternalState[mappedKey] = after;
-            change.appliedTo = 'global';
-            change.before = before;
-            change.after = after;
-          } else {
-            const before = Number(currentVal ?? 0);
-            const deltaAmount = isPercent ? Math.round((deltaSigned / 100) * (before || 1)) : deltaSigned;
-            const after = before + deltaAmount;
-            this.myInternalState[mappedKey] = after;
-            change.appliedTo = 'global';
-            change.before = before;
-            change.after = after;
-          }
+          continue;
         }
-      } catch (err) {
-        change.appliedTo = 'error';
+        if (statName === 'HP') {
+          const prev = member.hp;
+          const change = isPercent
+            ? (member.maxHp * Math.abs(delta)) / 100 * (delta < 0 ? -1 : 1)
+            : delta;
+          member.hp = Math.max(0, Math.min(member.maxHp, prev + change));
+          summary.applied.push(
+            `${fullTag} → ${member.name} HP ${prev} → ${member.hp}`,
+          );
+        } else {
+          summary.errors.push(
+            `Unknown party-member stat "${statName}" in tag ${fullTag}`,
+          );
+        }
+      } else {
+        // Core stat on myInternalState (e.g. [HP-10], [KAN+50])
+        const statKey = statName.toLowerCase();
+        if (!this.isCoreNumericStat(statKey)) {
+          summary.errors.push(
+            `Unknown core stat "${statName}" in tag ${fullTag}`,
+          );
+          continue;
+        }
+        const maxVal = coreMaxValues[statKey];
+        const current = this.getCoreStat(statKey);
+        const change = isPercent
+          ? (maxVal * Math.abs(delta)) / 100 * (delta < 0 ? -1 : 1)
+          : delta;
+        const newVal = Math.max(0, Math.min(maxVal, current + change));
+        this.setCoreStat(statKey, newVal);
+        summary.applied.push(`${fullTag} → ${statKey} ${current} → ${newVal}`);
       }
-
-      changes.push(change);
     }
 
-    if (changes.length > 0) {
-      console.debug('[parseHiddenTags] Applied changes:', changes);
-    }
-
-    return { changes };
-  }
-
-  /**
-   * handleAIResponse
-   * Accepts { text, hidden } from the AI, applies hidden tags first, then processes visible text effects.
-   */
-  handleAIResponse(response: { text: string; hidden?: string }): ParseSummary {
-    const summary = this.parseHiddenTags(response.hidden || '');
-    if (typeof response.text === 'string') {
-      this.myInternalState['numChars'] = (this.myInternalState['numChars'] || 0) + response.text.length;
-    }
-    // If BaseStage has update hooks, call them
-    if (typeof (this as any).requestUpdate === 'function') {
-      try { (this as any).requestUpdate(); } catch (e) { /* ignore */ }
-    }
     return summary;
   }
 
+  /**
+   * Handles a structured AI response that may contain a hidden field with RPG tags.
+   * Delegates to parseHiddenTags if a hidden string is present.
+   *
+   * @returns A ParseSummary (empty if no hidden field).
+   */
+  handleAIResponse(response: { text: string; hidden?: string }): ParseSummary {
+    if (response.hidden) {
+      return this.parseHiddenTags(response.hidden);
+    }
+    return { applied: [], errors: [] };
+  }
+
+  // ---- Helper for Background Logic ---------------------------------------
+
+  getBackgroundImage(): string {
+    const locs: { [key: string]: string } = {
+      karakura_town: 'url_to_karakura_img',
+      squad_4_hospital: 'url_to_hospital_img',
+      seireitei: 'url_to_seireitei_img',
+      hueco_mundo: 'url_to_hueco_mundo_img',
+    };
+    return locs[this.myInternalState.location] ?? '';
+  }
+
+  // ---- Render ------------------------------------------------------------
+
   render() {
+    const { hp, kan, bloodlust, respect, party } = this.myInternalState;
     return (
-      <div style={{
-        width: '100%', height: '100%', 
-        backgroundImage: `url(${this.getBackgroundImage()})`, 
-        backgroundSize: 'cover', position: 'relative', overflow: 'hidden'
-      }}>
-        {/* HUD, party, overlays unchanged from previous code */}
-        <div style={{
-          position: 'absolute', bottom: '20px', left: '20px', display: 'flex', gap: '15px'
-        }}>
-          {this.myInternalState['party'].map((member: any, i: number) => (
-            member.name !== 'Slot 2' && member.name !== 'Slot 3' && (
-              <div key={i} style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', padding: '15px', borderRadius: '8px', 
-                border: '2px solid #910000', color: 'white', minWidth: '160px',
-                boxShadow: '0 0 10px rgba(145, 0, 0, 0.5)'
-              }}>
-                <div style={{ fontWeight: 'bold', color: '#ff4d4d', marginBottom: '5px' }}>{member.name}</div>
-                <div style={{ fontSize: '12px' }}>HP: {member.hp} / {member.maxHp}</div>
-                <div style={{ width: '100%', height: '8px', background: '#333', marginTop: '4px' }}>
-                  <div style={{ width: `${(member.hp / member.maxHp) * 100}%`, height: '100%', background: '#ff4d4d' }} />
-                </div>
-              </div>
-            )
+      <div
+        className="stage-container"
+        style={{ backgroundImage: this.getBackgroundImage() }}
+      >
+        <div className="hud">
+          <div>HP: {hp}</div>
+          <div>KAN: {kan}</div>
+          <div>Bloodlust: {bloodlust}</div>
+          <div>Respect: {respect}</div>
+        </div>
+        <div className="party">
+          {party.map((m, i) => (
+            <div key={i} className="party-member">
+              <span>{m.name}</span>
+              <span>
+                {m.hp}/{m.maxHp}
+              </span>
+            </div>
           ))}
         </div>
-
-        <div style={{ position: 'absolute', top: '20px', right: '20px', textAlign: 'right', color: 'white' }}>
-          <div style={{ color: '#ffd700' }}>KAN: {this.myInternalState['kan']}</div>
-          <div style={{ color: '#70d6ff' }}>BLOODLUST: {this.myInternalState['bloodlust']}%</div>
-        </div>
-
-        {this.myInternalState['active_cutaway_id'] && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-            backgroundColor: 'black', zIndex: 1000, display: 'flex', justifyContent: 'center'
-          }}>
-            <img 
-              src={`url_to_cutaway_${this.myInternalState['active_cutaway_id']}`} 
-              style={{ maxHeight: '100%', maxWidth: '100%' }} 
-              alt="Cinematic Event"
-            />
-          </div>
-        )}
-
-        {this.myInternalState['is_night_scene'] && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-            backgroundColor: 'black', zIndex: 1001, display: 'flex', 
-            flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
-          }}>
-            <h2 style={{ color: '#ff4d4d', fontStyle: 'italic' }}>...Hours later in the Seireitei...</h2>
-            <div style={{ fontSize: '40px' }}>💖</div>
-          </div>
-        )}
-
       </div>
     );
   }
-          }
+}
+
