@@ -1,4 +1,4 @@
-import { StageBase, InitialData } from "./stage";
+import { StageBase, InitialData } from "../stage";
 
 export type InitStateType = any;
 export type ChatStateType = any;
