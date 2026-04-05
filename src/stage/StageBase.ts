@@ -3,15 +3,15 @@ import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
-  MessageState = any,
-  ConfigState = any
+  TInit extends Record<string, any> = Record<string, any>,
+  TChat extends Record<string, any> = Record<string, any>,
+  TMessage extends Record<string, any> = Record<string, any>,
+  TConfig extends Record<string, any> = Record<string, any>
 > {
   ctx: StageContext;
   env: Environment;
 
-  constructor(initial: InitState, chat: ChatState, config: ConfigState) {
+  constructor(initial: TInit, chat: TChat, config: TConfig) {
     this.ctx = {
       init: initial,
       chat,
