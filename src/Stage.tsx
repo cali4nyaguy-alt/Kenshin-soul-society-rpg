@@ -53,35 +53,29 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
      ***/
     myInternalState: {[key: string]: any};
 
-    constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
-        /***
-         This is the first thing called in the stage,
-         to create an instance of it.
-         The definition of InitialData is at @link https://github.com/CharHubAI/chub-stages-ts/blob/main/src/types/initial.ts
-         Character at @link https://github.com/CharHubAI/chub-stages-ts/blob/main/src/types/character.ts
-         User at @link https://github.com/CharHubAI/chub-stages-ts/blob/main/src/types/user.ts
-         ***/
-        super(data);
-        const {
-            characters,         // @type:  { [key: string]: Character }
-            users,                  // @type:  { [key: string]: User}
-            config,                                 //  @type:  ConfigType
-            messageState,                           //  @type:  MessageStateType
-            environment,                     // @type: Environment (which is a string)
-            initState,                             // @type: null | InitStateType
-            chatState                              // @type: null | ChatStateType
-        } = data;
-        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps); {
+    constructor(data: InitialData<InitStateType, ChatStateType>) {
+  super(data);
 
-    this.myInternalState['numChars'] = 0;
-    this.myInternalState['numUsers'] = 0;
-    this.myInternalState['hp'] = 100;
-    this.myInternalState['bloodlust'] = 0;
-    this.myInternalState['kan'] = 0;
-    this.myInternalState['respect'] = 0;
-  
+  const {
+    characters,
+    users,
+    config,
+    messageState,
+    environment,
+    initState,
+    chatState
+  } = data;
 
-  } / This is the closing bracket that was on line 77
+  this.myInternalState = messageState != null ? messageState : {};
+
+  this.myInternalState['numChars'] = 0;
+  this.myInternalState['numUsers'] = 0;
+  this.myInternalState['hp'] = 100;
+  this.myInternalState['bloodlust'] = 0;
+  this.myInternalState['kan'] = 0;
+  this.myInternalState['respect'] = 0;
+    }
+    
  
     
 
