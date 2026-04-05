@@ -1,5 +1,13 @@
 import React from 'react';
-import { BaseStage, StageProps } from './BaseStage';
+import {
+  StageBase,
+  InitialData,
+  Message,
+  StageResponse,
+  LoadResponse,
+} from '@chub-ai/stages-ts';
+
+type RPGInternalState = Record<string, any>;
 
 type TagChange = {
   rawTag: string;
@@ -16,9 +24,12 @@ type ParseSummary = {
   changes: TagChange[];
 };
 
-export default class Stage extends BaseStage {
-  constructor(props: StageProps) {
-    super(props);
+export class Stage extends StageBase<any, any, any, any> {
+  myInternalState: RPGInternalState;
+
+  constructor(data: InitialData<any, any, any, any>) {
+    super(data);
+    this.myInternalState = {};
 
     // --- INTERNAL STATE (The Brain) ---
     this.myInternalState['numChars'] = 0;
@@ -219,6 +230,40 @@ export default class Stage extends BaseStage {
       try { (this as any).requestUpdate(); } catch (e) { /* ignore */ }
     }
     return summary;
+  }
+
+  async load(): Promise<Partial<LoadResponse<any, any, any>>> {
+    return { success: true, error: null, initState: null, chatState: null, messageState: null };
+  }
+
+  async setState(state: any): Promise<void> {
+    if (state && typeof state === 'object') {
+      Object.assign(this.myInternalState, state);
+    }
+  }
+
+  async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<any, any>>> {
+    this.myInternalState['numUsers'] = (this.myInternalState['numUsers'] || 0) + 1;
+    return {
+      stageDirections: null,
+      messageState: null,
+      modifiedMessage: null,
+      error: null,
+      systemMessage: null,
+      chatState: null,
+    };
+  }
+
+  async afterResponse(botMessage: Message): Promise<Partial<StageResponse<any, any>>> {
+    this.handleAIResponse({ text: botMessage.content, hidden: '' });
+    return {
+      stageDirections: null,
+      messageState: null,
+      modifiedMessage: null,
+      error: null,
+      systemMessage: null,
+      chatState: null,
+    };
   }
 
   render() {
