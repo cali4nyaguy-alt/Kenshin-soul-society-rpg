@@ -1,4 +1,5 @@
-import { StageBase, InitialData } from "../stage";
+import { InitialData, Message, LoadResponse, StageResponse } from "@chub-ai/stages-ts";
+import { StageBase } from "./stage";
 
 export type InitStateType = any;
 export type ChatStateType = any;
@@ -15,14 +16,31 @@ export class Stage extends StageBase<
   MessageStateType,
   ConfigType
 > {
-  // Called once when the stage starts
-  async load() {
-    this.env.log("Stage loaded");
+  constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
+    super(data);
   }
 
-  // Called when the user sends a message
-  async onUserMessage(msg: string) {
-    return [this.reply(`You said: ${msg}`)];
+  // Called once when the stage starts
+  async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+    this.env.log("Stage loaded");
+    return { success: true, error: null };
+  }
+
+  // Called when the stage state changes (e.g. after a chat branch/swipe)
+  async setState(state: MessageStateType): Promise<void> {
+    void state; // no-op by default; override if your stage tracks message-level state
+  }
+
+  // Called before the user's message is sent to the LLM
+  async beforePrompt(inputMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    void inputMessage;
+    return { error: null };
+  }
+
+  // Called after the LLM responds
+  async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    void botMessage;
+    return { error: null };
   }
 
   // Called to render UI (used by TestRunner)
