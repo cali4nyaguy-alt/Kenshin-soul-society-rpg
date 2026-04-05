@@ -71,15 +71,18 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             initState,                             // @type: null | InitStateType
             chatState                              // @type: null | ChatStateType
         } = data;
-        this.myInternalState = messageState != null ? messageState : {'someKey': 'someValue'};
-        this.myInternalState['numUsers'] = Object.keys(users).length;
-        this.myInternalState['numChars'] = Object.keys(characters).length;    
-     this.myInternalState['numUsers'] = 0; // Existing line 76
+        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps) {
+    super(props);
+
+    this.myInternalState['numChars'] = 0;
+    this.myInternalState['numUsers'] = 0;
     this.myInternalState['hp'] = 100;
     this.myInternalState['bloodlust'] = 0;
     this.myInternalState['kan'] = 0;
     this.myInternalState['respect'] = 0;
-  } / This is the closing bracket that was on line 77
+  }
+
+  }); / This is the closing bracket that was on line 77
  
     
 
