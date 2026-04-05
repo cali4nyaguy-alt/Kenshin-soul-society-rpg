@@ -1,30 +1,30 @@
 import {Stage} from "./Stage";
 import {useEffect, useState} from "react";
-import {DEFAULT_INITIAL, StageBase, InitialData} from "@chub-ai/stages-ts";
+import {DEFAULT_INITIAL} from "@chub-ai/stages-ts";
 
 // Modify this JSON to include whatever character/user information you want to test.
 import InitData from './assets/test-init.json';
 
-export const TestStageRunner = ({ factory }: { 
+export const TestStageRunner = ({ factory: _factory }: { 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     factory: (data: any) => Stage 
 }) => {
 
-    // You may need to add a @ts-ignore here,
+    // You may need to add a @ts-expect-error here,
     //     as the linter doesn't always like the idea of reading types arbitrarily from files
-    // @ts-ignore
     const [stage, _setStage] = useState(new Stage(
-        {...DEFAULT_INITIAL, ...InitData},  // InitState
-        {},                                 // ChatState
-        {}                                  // ConfigState
+        {...DEFAULT_INITIAL, ...InitData}   // InitialData (merged with test data)
     ));
 
     // This is what forces the stage node to re-render.
     const [node, setNode] = useState(new Date());
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function refresh() {
         setNode(new Date());
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     async function delayedTest(test: any, delaySeconds: number) {
         await new Promise(f => setTimeout(f, delaySeconds * 1000));
         return test();
@@ -88,6 +88,7 @@ export const TestStageRunner = ({ factory }: {
         }).catch((err) => {
             console.error(`Error from stage during load:`, err);
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return <>
