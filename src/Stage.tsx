@@ -54,7 +54,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
      ***/
     myInternalState: {[key: string]: any};
 
-    constructor(data: InitialData<InitStateType, ChatStateType>) {
+    constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) 
   super(data);
 
   const {
