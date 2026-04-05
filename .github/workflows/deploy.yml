@@ -61,9 +61,6 @@ jobs:
             fi
           fi
 
-      - name: Char UUIDGen
-        run: npx @charhub/uuidgen
-
       - name: Install dependencies
         run: npm install
 
