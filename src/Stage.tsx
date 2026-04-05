@@ -1,9 +1,17 @@
-import { StageBase, InitialData } from "../stage";
+import {
+  StageBase,
+  InitialData,
+  LoadResponse,
+  StageResponse,
+  Message,
+} from "@chub-ai/stages-ts";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type InitStateType = any;
 export type ChatStateType = any;
 export type MessageStateType = any;
 export type ConfigType = any;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /***
  A simple example class that implements the interfaces.
@@ -15,14 +23,45 @@ export class Stage extends StageBase<
   MessageStateType,
   ConfigType
 > {
-  // Called once when the stage starts
-  async load() {
-    this.env.log("Stage loaded");
+  constructor(
+    data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>
+  ) {
+    super(data);
   }
 
-  // Called when the user sends a message
-  async onUserMessage(msg: string) {
-    return [this.reply(`You said: ${msg}`)];
+  // Called once when the stage starts
+  async load(): Promise<
+    Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>
+  > {
+    console.log("Stage loaded");
+    return {};
+  }
+
+  // Called to handle state jumps/swipes
+  async setState(_state: MessageStateType): Promise<void> {}
+
+  // Called before a user message is sent to the LLM
+  async beforePrompt(
+    _inputMessage: Message
+  ): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    return {
+      stageDirections: null,
+      modifiedMessage: null,
+      systemMessage: null,
+      error: null,
+    };
+  }
+
+  // Called after the LLM responds
+  async afterResponse(
+    _botMessage: Message
+  ): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    return {
+      stageDirections: null,
+      modifiedMessage: null,
+      systemMessage: null,
+      error: null,
+    };
   }
 
   // Called to render UI (used by TestRunner)
