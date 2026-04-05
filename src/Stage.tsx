@@ -1,4 +1,4 @@
-import { StageBase, InitialData } from "@chub-ai/stages";
+import { StageBase, InitialData } from "./stage";
 
 export type InitStateType = any;
 export type ChatStateType = any;
