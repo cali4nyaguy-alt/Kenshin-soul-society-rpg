@@ -12,7 +12,7 @@ function App() {
             {} // ConfigState (empty initial)
         );
     };
-    return isDev ? <TestStageRunner factory={stageFactory}/> : <ReactRunner factory={stageFactory} />;
+    return isDev ? <TestStageRunner factory={stageFactory}/> : <ReactRunner factory={stageFactory as any} />;
 }
 
 export default App;
