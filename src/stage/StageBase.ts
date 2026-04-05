@@ -5,15 +5,15 @@ import {
   StageResponse,
   Message as LibMessage,
 } from "@chub-ai/stages-ts";
-import { StageContext } from "./types";
+import { StageContext, InitState, ChatState, MessageState, ConfigState } from "./types";
 import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  TInitState = any,
-  TChatState = any,
-  TMessageState = any,
-  TConfigState = any
+  TInitState extends InitState = any,
+  TChatState extends ChatState = any,
+  TMessageState extends MessageState = any,
+  TConfigState extends ConfigState = any
 > extends LibraryStageBase<TInitState, TChatState, TMessageState, TConfigState> {
   ctx: StageContext;
   env: Environment;
@@ -21,14 +21,15 @@ export abstract class StageBase<
   constructor(data: InitialData<TInitState, TChatState, TMessageState, TConfigState>) {
     super(data);
     this.ctx = {
-      init: (data.initState ?? {}) as any,
-      chat: (data.chatState ?? {}) as any,
-      message: (data.messageState ?? {}) as any,
-      config: (data.config ?? {}) as any,
+      init: (data.initState ?? {}) as TInitState,
+      chat: (data.chatState ?? {}) as TChatState,
+      message: (data.messageState ?? {}) as TMessageState,
+      config: (data.config ?? {}) as TConfigState,
     };
     this.env = new Environment(this.ctx);
   }
 
+  // Default no-op implementation; subclasses may override to persist state.
   async setState(_state: TMessageState): Promise<void> {}
 
   async beforePrompt(
