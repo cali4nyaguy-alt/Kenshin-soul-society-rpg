@@ -1,4 +1,5 @@
-import { StageBase, InitialData } from "../stage";
+import { LoadResponse } from "@chub-ai/stages-ts";
+import { StageBase } from "./stage";
 
 export type InitStateType = any;
 export type ChatStateType = any;
@@ -16,8 +17,9 @@ export class Stage extends StageBase<
   ConfigType
 > {
   // Called once when the stage starts
-  async load() {
+  async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
     this.env.log("Stage loaded");
+    return { success: true, error: null };
   }
 
   // Called when the user sends a message
