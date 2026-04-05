@@ -47,15 +47,17 @@ jobs:
               echo "Writing github path 'https://github.com/${{ github.repository }}'"
               echo -e "\ngithub_path: 'https://github.com/${{ github.repository }}'" >> public/chub_meta.yaml
 
+              git config --global --add safe.directory "$(pwd)"
               git config --local user.email "action@github.com"
               git config --local user.name "GitHub Action"
 
+              git fetch origin main
               git add public/chub_meta.yaml
               git commit -m "Add github_path to chub_meta.yaml"
 
-              # Fix push rejection by syncing first
-              git pull --rebase || true
-              git push
+              # Sync before pushing
+              git pull --rebase origin main || true
+              git push origin main
             fi
           fi
 
