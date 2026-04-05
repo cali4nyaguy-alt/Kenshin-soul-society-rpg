@@ -232,8 +232,9 @@ export default class Stage extends BaseStage {
     const bloodlust: number = this.myInternalState['bloodlust'] ?? 0;
     if (bloodlust <= 75) return stats.charisma;
     // Scale from 100% CHA at 75 BL → 50% CHA at 100 BL
-    const penalty = 1 - ((bloodlust - 75) / 50); // 75→1.0, 100→0.5
-    return Math.max(1, Math.round(stats.charisma * penalty));
+    const clampedBL = Math.min(bloodlust, 100);
+    const penalty = 1 - ((clampedBL - 75) / 50); // 75→1.0, 100→0.5
+    return Math.max(1, Math.round(stats.charisma * Math.max(0.5, penalty)));
   }
 
   // ─── D10 Resolution Engine ────────────────────────────────────
