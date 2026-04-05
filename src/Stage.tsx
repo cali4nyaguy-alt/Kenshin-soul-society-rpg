@@ -78,7 +78,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     this.myInternalState['bloodlust'] = 0;
     this.myInternalState['kan'] = 0;
     this.myInternalState['respect'] = 0;
-  } /} / This is the closing bracket that was on line 77
+  } / This is the closing bracket that was on line 77
  
     
 
