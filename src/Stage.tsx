@@ -1,4 +1,5 @@
-import { StageBase, InitialData } from "../stage";
+import { StageBase, InitialData, Message, LoadResponse, StageResponse } from "@chub-ai/stages-ts";
+import { ReactElement } from "react";
 
 export type InitStateType = any;
 export type ChatStateType = any;
@@ -15,18 +16,28 @@ export class Stage extends StageBase<
   MessageStateType,
   ConfigType
 > {
-  // Called once when the stage starts
-  async load() {
-    this.env.log("Stage loaded");
+  constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
+    super(data);
   }
 
-  // Called when the user sends a message
-  async onUserMessage(msg: string) {
-    return [this.reply(`You said: ${msg}`)];
+  // Called once when the stage starts
+  async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+    console.log("Stage loaded");
+    return { success: true, error: null };
+  }
+
+  async setState(_state: MessageStateType): Promise<void> {}
+
+  async beforePrompt(_inputMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    return { error: null, modifiedMessage: null, stageDirections: null, systemMessage: null };
+  }
+
+  async afterResponse(_botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+    return { error: null, modifiedMessage: null, stageDirections: null, systemMessage: null };
   }
 
   // Called to render UI (used by TestRunner)
-  render() {
+  render(): ReactElement {
     return <div>Stage is running</div>;
   }
 }
