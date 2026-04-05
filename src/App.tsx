@@ -1,5 +1,5 @@
 import {ReactRunner} from "@chub-ai/stages-ts";
-import {Stage} from "./Stage";
+import Stage from "./Stage";
 import {TestStageRunner} from "./TestRunner";
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
             {} // ConfigState (empty initial)
         );
     };
-    return isDev ? <TestStageRunner factory={stageFactory}/> : <ReactRunner factory={stageFactory} />;
+    return isDev ? <TestStageRunner factory={stageFactory}/> : <ReactRunner factory={stageFactory as any} />;
 }
 
 export default App;
