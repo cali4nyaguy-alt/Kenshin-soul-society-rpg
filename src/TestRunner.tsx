@@ -12,11 +12,7 @@ export const TestStageRunner = ({ factory }: {
     // You may need to add a @ts-ignore here,
     //     as the linter doesn't always like the idea of reading types arbitrarily from files
     // @ts-ignore
-    const [stage, _setStage] = useState(new Stage(
-        {...DEFAULT_INITIAL, ...InitData},  // InitState
-        {},                                 // ChatState
-        {}                                  // ConfigState
-    ));
+    const [stage, _setStage] = useState(new Stage({...DEFAULT_INITIAL, ...InitData}));
 
     // This is what forces the stage node to re-render.
     const [node, setNode] = useState(new Date());
