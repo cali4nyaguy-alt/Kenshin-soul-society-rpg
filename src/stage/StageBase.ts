@@ -1,27 +1,53 @@
-import { StageContext } from "./types";
+import {
+  StageBase as LibraryStageBase,
+  InitialData,
+  LoadResponse,
+  StageResponse,
+  Message as LibMessage,
+} from "@chub-ai/stages-ts";
+import { StageContext, InitState, ChatState, MessageState, ConfigState } from "./types";
 import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
-  MessageState = any,
-  ConfigState = any
-> {
+  TInitState extends InitState = any,
+  TChatState extends ChatState = any,
+  TMessageState extends MessageState = any,
+  TConfigState extends ConfigState = any
+> extends LibraryStageBase<TInitState, TChatState, TMessageState, TConfigState> {
   ctx: StageContext;
   env: Environment;
 
-  constructor(initial: InitState, chat: ChatState, config: ConfigState) {
+  constructor(data: InitialData<TInitState, TChatState, TMessageState, TConfigState>) {
+    super(data);
     this.ctx = {
-      init: initial,
-      chat,
-      message: {},
-      config,
+      init: (data.initState ?? {}) as TInitState,
+      chat: (data.chatState ?? {}) as TChatState,
+      message: (data.messageState ?? {}) as TMessageState,
+      config: (data.config ?? {}) as TConfigState,
     };
     this.env = new Environment(this.ctx);
   }
 
-  abstract load(): Promise<void> | void;
+  // Default no-op implementation; subclasses may override to persist state.
+  async setState(_state: TMessageState): Promise<void> {}
+
+  async beforePrompt(
+    _inputMessage: LibMessage
+  ): Promise<Partial<StageResponse<TChatState, TMessageState>>> {
+    return {};
+  }
+
+  async afterResponse(
+    _botMessage: LibMessage
+  ): Promise<Partial<StageResponse<TChatState, TMessageState>>> {
+    return {};
+  }
+
+  async load(): Promise<Partial<LoadResponse<TInitState, TChatState, TMessageState>>> {
+    return {};
+  }
+
   abstract onUserMessage(msg: string): Promise<Message[]> | Message[];
 
   protected reply(text: string): Message {
