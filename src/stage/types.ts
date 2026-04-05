@@ -1,0 +1,1 @@
+export type InitState = Record<string, any>; export type ChatState = Record<string, any>; export type MessageState = Record<string, any>; export type ConfigState = Record<string, any>; export interface StageContext { init: InitState; chat: ChatState; message: MessageState; config: ConfigState; }
