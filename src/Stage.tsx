@@ -71,8 +71,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             initState,                             // @type: null | InitStateType
             chatState                              // @type: null | ChatStateType
         } = data;
-        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps) {
-    super(props);
+        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps) 
+    super(props); {
 
     this.myInternalState['numChars'] = 0;
     this.myInternalState['numUsers'] = 0;
@@ -80,7 +80,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     this.myInternalState['bloodlust'] = 0;
     this.myInternalState['kan'] = 0;
     this.myInternalState['respect'] = 0;
-  }
+  
 
   }); / This is the closing bracket that was on line 77
  
