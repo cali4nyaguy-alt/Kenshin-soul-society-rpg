@@ -3,11 +3,16 @@ import {Stage} from "./Stage";
 import {TestStageRunner} from "./TestRunner";
 
 function App() {
-  const isDev = import.meta.env.MODE === 'development';
-  console.info(`Running in ${import.meta.env.MODE}`);
-
-  return isDev ? <TestStageRunner factory={(data) => new Stage(data)}/> :
-      <ReactRunner factory={(data) => new Stage(data)} />;
+    const isDev = import.meta.env.MODE === 'development';
+    console.info(`Running in ${import.meta.env.MODE}`);
+    const stageFactory = (data: any) => {
+        return new Stage(
+            data.state || {}, // InitState
+            {}, // ChatState (empty initial)
+            {} // ConfigState (empty initial)
+        );
+    };
+    return isDev ? <TestStageRunner factory={stageFactory}/> : <ReactRunner factory={stageFactory} />;
 }
 
-export default App
+export default App;
