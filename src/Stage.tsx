@@ -67,7 +67,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
   } = data;
 
   this.myInternalState = messageState != null ? messageState : {};
-
+     
   this.myInternalState['numChars'] = 0;
   this.myInternalState['numUsers'] = 0;
   this.myInternalState['hp'] = 100;
