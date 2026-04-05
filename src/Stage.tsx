@@ -73,8 +73,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         } = data;
         this.myInternalState = messageState != null ? messageState : {'someKey': 'someValue'};
         this.myInternalState['numUsers'] = Object.keys(users).length;
-        this.myInternalState['numChars'] = Object.keys(characters).length;
-    }
+        this.myInternalState['numChars'] = Object.keys(characters).length;    this.myInternalState['numUsers'] = 0; // Existing line 76
+    this.myInternalState['hp'] = 100;
+    this.myInternalState['bloodlust'] = 0;
+    this.myInternalState['kan'] = 0;
+    this.myInternalState['respect'] = 0;
+  } /} / This is the closing bracket that was on line 77
+ 
+    
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         /***
@@ -195,7 +201,31 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             display: 'grid',
             alignItems: 'stretch'
         }}>
-            <div>Hello World! I'm an empty stage! With {this.myInternalState['someKey']}!</div>
+            <div style={{
+    position: 'absolute',
+    bottom: '20px',
+    left: '20px',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: '15px',
+    borderRadius: '10px',
+    border: '2px solid #555',
+    color: 'white',
+    fontFamily: 'monospace'
+}}>
+    <div style={{color: '#ff4d4d', fontWeight: 'bold', fontSize: '18px'}}>
+        HP: {this.myInternalState['hp']}
+    </div>
+    <div style={{color: '#70d6ff', fontWeight: 'bold'}}>
+        BLOODLUST: {this.myInternalState['bloodlust']}%
+    </div>
+    <div style={{color: '#ffd700'}}>
+        KAN: {this.myInternalState['kan']}
+    </div>
+    <div style={{color: '#99ff99', fontSize: '12px'}}>
+        RESPECT: {this.myInternalState['respect']}
+    </div>
+</div>
+
             <div>There is/are/were {this.myInternalState['numChars']} character(s)
                 and {this.myInternalState['numUsers']} human(s) here.
             </div>
