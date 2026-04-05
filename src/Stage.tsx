@@ -1,4 +1,4 @@
-import { StageBase, InitialData } from "../stage";
+import { StageBase } from "./stage";
 
 export type InitStateType = any;
 export type ChatStateType = any;
@@ -18,6 +18,7 @@ export class Stage extends StageBase<
   // Called once when the stage starts
   async load() {
     this.env.log("Stage loaded");
+    return {};
   }
 
   // Called when the user sends a message

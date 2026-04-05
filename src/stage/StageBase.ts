@@ -1,27 +1,52 @@
+import {
+  StageBase as LibraryStageBase,
+  InitialData,
+  LoadResponse,
+  StageResponse,
+  Message as LibMessage,
+} from "@chub-ai/stages-ts";
 import { StageContext } from "./types";
 import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
-  MessageState = any,
-  ConfigState = any
-> {
+  TInitState = any,
+  TChatState = any,
+  TMessageState = any,
+  TConfigState = any
+> extends LibraryStageBase<TInitState, TChatState, TMessageState, TConfigState> {
   ctx: StageContext;
   env: Environment;
 
-  constructor(initial: InitState, chat: ChatState, config: ConfigState) {
+  constructor(data: InitialData<TInitState, TChatState, TMessageState, TConfigState>) {
+    super(data);
     this.ctx = {
-      init: initial,
-      chat,
-      message: {},
-      config,
+      init: (data.initState ?? {}) as any,
+      chat: (data.chatState ?? {}) as any,
+      message: (data.messageState ?? {}) as any,
+      config: (data.config ?? {}) as any,
     };
     this.env = new Environment(this.ctx);
   }
 
-  abstract load(): Promise<void> | void;
+  async setState(_state: TMessageState): Promise<void> {}
+
+  async beforePrompt(
+    _inputMessage: LibMessage
+  ): Promise<Partial<StageResponse<TChatState, TMessageState>>> {
+    return {};
+  }
+
+  async afterResponse(
+    _botMessage: LibMessage
+  ): Promise<Partial<StageResponse<TChatState, TMessageState>>> {
+    return {};
+  }
+
+  async load(): Promise<Partial<LoadResponse<TInitState, TChatState, TMessageState>>> {
+    return {};
+  }
+
   abstract onUserMessage(msg: string): Promise<Message[]> | Message[];
 
   protected reply(text: string): Message {
