@@ -6,13 +6,17 @@ import {DEFAULT_INITIAL, StageBase, InitialData} from "@chub-ai/stages-ts";
 import InitData from './assets/test-init.json';
 
 export const TestStageRunner = ({ factory }: { 
-    factory: (data: InitialData<any, any, any, any>) => Stage 
+    factory: (data: any) => Stage 
 }) => {
 
     // You may need to add a @ts-ignore here,
     //     as the linter doesn't always like the idea of reading types arbitrarily from files
     // @ts-ignore
-    const [stage, _setStage] = useState(new Stage({...DEFAULT_INITIAL, ...InitData}));
+    const [stage, _setStage] = useState(new Stage(
+        {...DEFAULT_INITIAL, ...InitData},  // InitState
+        {},                                 // ChatState
+        {}                                  // ConfigState
+    ));
 
     // This is what forces the stage node to re-render.
     const [node, setNode] = useState(new Date());
@@ -45,7 +49,7 @@ export const TestStageRunner = ({ factory }: {
         refresh();
         */
         /***
-         "What is all of this nonsense with 'DEFAULT_MESSAGE'?” you may well ask.
+         "What is all of this nonsense with 'DEFAULT_MESSAGE'?" you may well ask.
          The purpose of this is to future-proof your test runner.
          The stage interface is designed to be forwards-compatible,
             so that a stage with a certain library version will continue to work
@@ -78,13 +82,11 @@ export const TestStageRunner = ({ factory }: {
 
     useEffect(() => {
         // Always do this first, and put any other calls inside the load response.
-        stage.load().then((res) => {
-            console.info(`Test StageBase Runner load success result was ${res.success}`);
-            if(!res.success || res.error != null) {
-                console.error(`Error from stage during load, error: ${res.error}`);
-            } else {
-                runTests().then(() => console.info("Done running tests."));
-            }
+        stage.load().then(() => {
+            console.info(`Test StageBase Runner load success`);
+            runTests().then(() => console.info("Done running tests."));
+        }).catch((err) => {
+            console.error(`Error from stage during load:`, err);
         });
     }, []);
 
