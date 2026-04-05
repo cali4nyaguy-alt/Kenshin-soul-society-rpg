@@ -44,7 +44,8 @@ type ChatStateType = any;
  If you want to rename it, be sure to modify App.js as well.
  @link https://github.com/CharHubAI/chub-stages-ts/blob/main/src/types/stage.ts
  ***/
-export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
+export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType>
+ )
 
     /***
      A very simple example internal state. Can be anything.
