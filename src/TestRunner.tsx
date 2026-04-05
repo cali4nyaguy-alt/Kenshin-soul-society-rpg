@@ -5,16 +5,9 @@ import {DEFAULT_INITIAL, StageBase, InitialData} from "@chub-ai/stages-ts";
 // Modify this JSON to include whatever character/user information you want to test.
 import InitData from './assets/test-init.json';
 
-export interface TestStageRunnerProps<StageType extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType>, InitStateType, ChatStateType, MessageStateType, ConfigType> {
-    factory: (data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) => StageType;
-}
-
-/***
- This is a testing class for running a stage locally when testing,
-    outside the context of an active chat. See runTests() below for the main idea.
- ***/
-export const TestStageRunner = <StageType extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType>,
-    InitStateType, ChatStateType, MessageStateType, ConfigType>({ factory }: TestStageRunnerProps<StageType, InitStateType, ChatStateType, MessageStateType, ConfigType>) => {
+export const TestStageRunner = ({ factory }: { 
+    factory: (data: InitialData<any, any, any, any>) => Stage 
+}) => {
 
     // You may need to add a @ts-ignore here,
     //     as the linter doesn't always like the idea of reading types arbitrarily from files
@@ -52,7 +45,7 @@ export const TestStageRunner = <StageType extends StageBase<InitStateType, ChatS
         refresh();
         */
         /***
-         "What is all of this nonsense with 'DEFAULT_MESSAGE'?" you may well ask.
+         "What is all of this nonsense with 'DEFAULT_MESSAGE'?” you may well ask.
          The purpose of this is to future-proof your test runner.
          The stage interface is designed to be forwards-compatible,
             so that a stage with a certain library version will continue to work
