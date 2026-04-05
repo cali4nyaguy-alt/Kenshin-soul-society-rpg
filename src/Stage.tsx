@@ -71,8 +71,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             initState,                             // @type: null | InitStateType
             chatState                              // @type: null | ChatStateType
         } = data;
-        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps) 
-    super(props); {
+        this.myInternalState = messageState != null ? messageState :   constructor(props: StageProps); {
 
     this.myInternalState['numChars'] = 0;
     this.myInternalState['numUsers'] = 0;
