@@ -274,6 +274,30 @@ export default class Stage extends BaseStage {
     return 'bittersweet';
   }
 
+  // ─── NPC Level Scaling ─────────────────────────────────────────
+  /**
+   * Returns the level bonus NPCs receive relative to Kenshin's level.
+   *   Levels  1–10 → +10
+   *   Levels 11–20 → +5
+   *   Levels 21+   → +1
+   */
+  getNpcLevelBonus(): number {
+    const level: number = this.myInternalState['level'] ?? 1;
+    if (level <= 10) return 10;
+    if (level <= 20) return 5;
+    return 1;
+  }
+
+  /**
+   * Return the effective NPC level after applying the scaling bonus.
+   * @param baseNpcLevel – the NPC's un-scaled level (defaults to Kenshin's level)
+   */
+  getScaledNpcLevel(baseNpcLevel?: number): number {
+    const kenshinLevel: number = this.myInternalState['level'] ?? 1;
+    const base = baseNpcLevel ?? kenshinLevel;
+    return base + this.getNpcLevelBonus();
+  }
+
   // ─── Hidden-tag parsing API ───────────────────────────────────
   private static tagToKeyMap: { [k: string]: string } = {
     HP: 'hp',
@@ -508,6 +532,9 @@ export default class Stage extends BaseStage {
           <div style={{ color: '#ffd700' }}>KAN: {this.myInternalState['kan']}</div>
           <div style={{ color: '#70d6ff' }}>BLOODLUST: {this.myInternalState['bloodlust']}%</div>
           <div style={{ color: '#aaddff' }}>RESPECT: {this.myInternalState['respect']}</div>
+          <div style={{ color: '#ff9999', fontSize: '10px' }}>
+            NPC Scale: +{this.getNpcLevelBonus()} lvl
+          </div>
         </div>
 
         {/* ─── Top-left: The Big Six Stats ───────────────── */}
