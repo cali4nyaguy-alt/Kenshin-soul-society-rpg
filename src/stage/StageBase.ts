@@ -13,10 +13,10 @@ export abstract class StageBase<
 
   constructor(initial: InitState, chat: ChatState, config: ConfigState) {
     this.ctx = {
-      init: initial,
-      chat,
+      init: initial as any,
+      chat: chat as any,
       message: {},
-      config,
+      config: config as any,
     };
     this.env = new Environment(this.ctx);
   }
