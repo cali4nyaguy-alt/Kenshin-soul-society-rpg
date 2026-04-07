@@ -140,11 +140,18 @@ export class Stage extends BaseStage {
 
   /**
    * applyStartOfTurnPassive
-   * Called at the start of each player turn. Applies narrator passives.
+   * Called when a new turn begins. Applies narrator passives once per turn.
    * Currently handles Orihime's Santen Kesshun (10 % Max HP regen at 100 % affection).
    */
   applyStartOfTurnPassive(): number {
-    this.myInternalState['turn'] = (this.myInternalState['turn'] ?? 0) + 1;
+    const nextTurn = (this.myInternalState['turn'] ?? 0) + 1;
+    const lastPassiveTurn = this.myInternalState['lastPassiveTurn'] ?? 0;
+
+    // Guard: only apply once per turn
+    if (nextTurn <= lastPassiveTurn) return 0;
+
+    this.myInternalState['turn'] = nextTurn;
+    this.myInternalState['lastPassiveTurn'] = nextTurn;
 
     const bond = this.getNarratorBond();
     const hp = Number(this.myInternalState['hp'] ?? 0);

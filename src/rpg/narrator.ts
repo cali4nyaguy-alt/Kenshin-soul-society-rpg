@@ -77,7 +77,7 @@ export const NARRATOR_ORIHIME: NarratorDefinition = {
   passiveEffect: {
     name: 'Santen Kesshun',
     tier: 'god',
-    description: 'Kenshin regenerates 10% Max HP at the start of every turn.',
+    description: 'Kenshin regenerates 10% Max HP once per turn while Orihime narrates.',
     passiveKey: 'santen_kesshun',
   },
   environmentalPerks: [
