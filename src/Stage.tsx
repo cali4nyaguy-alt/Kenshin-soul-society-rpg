@@ -233,22 +233,33 @@ export default class Stage extends BaseStage {
     return Math.max(min, Math.min(max, value));
   }
 
+  /**
+   * Allowlist of nested paths the tag parser may read/write.
+   * This avoids dynamic property traversal entirely, preventing prototype pollution.
+   */
+  private static readonly NESTED_PATHS: Record<string, { get: (s: Record<string, any>) => number; set: (s: Record<string, any>, v: number) => void }> = {
+    'stats.dex': { get: (s) => Number(s['stats']?.dex ?? 0), set: (s, v) => { if (s['stats']) s['stats'].dex = v; } },
+    'stats.cha': { get: (s) => Number(s['stats']?.cha ?? 0), set: (s, v) => { if (s['stats']) s['stats'].cha = v; } },
+    'stats.wis': { get: (s) => Number(s['stats']?.wis ?? 0), set: (s, v) => { if (s['stats']) s['stats'].wis = v; } },
+    'stats.str': { get: (s) => Number(s['stats']?.str ?? 0), set: (s, v) => { if (s['stats']) s['stats'].str = v; } },
+    'stats.con': { get: (s) => Number(s['stats']?.con ?? 0), set: (s, v) => { if (s['stats']) s['stats'].con = v; } },
+    'hitenMeter.bars': { get: (s) => Number(s['hitenMeter']?.bars ?? 0), set: (s, v) => { if (s['hitenMeter']) s['hitenMeter'].bars = v; } },
+  };
+
   /** Resolve a possibly-nested key like "stats.dex" against myInternalState. */
   private resolveNestedGet(key: string): number {
-    const parts = key.split('.');
-    let obj: any = this.myInternalState;
-    for (const p of parts) obj = obj?.[p];
-    return Number(obj ?? 0);
+    const accessor = Stage.NESTED_PATHS[key];
+    if (accessor) return accessor.get(this.myInternalState);
+    return Number(this.myInternalState[key] ?? 0);
   }
 
   private resolveNestedSet(key: string, value: number): void {
-    const parts = key.split('.');
-    let obj: any = this.myInternalState;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (obj[parts[i]] == null) obj[parts[i]] = {};
-      obj = obj[parts[i]];
+    const accessor = Stage.NESTED_PATHS[key];
+    if (accessor) { accessor.set(this.myInternalState, value); return; }
+    // Only allow flat (non-dotted) keys for direct state
+    if (!key.includes('.')) {
+      this.myInternalState[key] = value;
     }
-    obj[parts[parts.length - 1]] = value;
   }
 
   parseHiddenTags(hiddenText: string): ParseSummary {
@@ -294,7 +305,7 @@ export default class Stage extends BaseStage {
       if (keyPart.includes('_')) {
         const idx = keyPart.lastIndexOf('_');
         const possibleStat = keyPart.slice(idx + 1).toUpperCase();
-        if (Stage.tagToKeyMap[possibleStat] || ['HP','KAN','BLOODLUST','DEX','CHA','WIS','STR','CON','LEVEL','HITEN','RESPECT'].includes(possibleStat)) {
+        if (Stage.tagToKeyMap[possibleStat] !== undefined) {
           targetName = keyPart.slice(0, idx);
           statKeyRaw = keyPart.slice(idx + 1);
         }
@@ -321,10 +332,11 @@ export default class Stage extends BaseStage {
               change.before = before;
               change.after = after;
             } else {
-              const before = Number((member as any)[mappedKey] ?? 0);
+              const memberRecord = member as unknown as Record<string, unknown>;
+              const before = Number(memberRecord[mappedKey] ?? 0);
               const deltaAmount = isPercent ? Math.round((deltaSigned / 100) * (before || 1)) : deltaSigned;
               const after = before + deltaAmount;
-              (member as any)[mappedKey] = after;
+              memberRecord[mappedKey] = after;
               change.appliedTo = `party:${member.name}`;
               change.before = before;
               change.after = after;
