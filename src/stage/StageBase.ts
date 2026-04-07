@@ -3,10 +3,10 @@ import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
+  InitState extends Record<string, any> = Record<string, any>,
+  ChatState extends Record<string, any> = Record<string, any>,
   MessageState = any,
-  ConfigState = any
+  ConfigState extends Record<string, any> = Record<string, any>
 > {
   ctx: StageContext;
   env: Environment;
