@@ -1,13 +1,8 @@
-import { StageContext } from "./types";
+import { StageContext, InitState, ChatState, ConfigState } from "./types";
 import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
-export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
-  MessageState = any,
-  ConfigState = any
-> {
+export abstract class StageBase {
   ctx: StageContext;
   env: Environment;
 

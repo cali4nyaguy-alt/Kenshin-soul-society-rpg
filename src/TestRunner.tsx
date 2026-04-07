@@ -1,22 +1,11 @@
 import {Stage} from "./Stage";
 import {useEffect, useState} from "react";
-import {DEFAULT_INITIAL, StageBase, InitialData} from "@chub-ai/stages-ts";
-
-// Modify this JSON to include whatever character/user information you want to test.
-import InitData from './assets/test-init.json';
 
 export const TestStageRunner = ({ factory }: { 
     factory: (data: any) => Stage 
 }) => {
 
-    // You may need to add a @ts-ignore here,
-    //     as the linter doesn't always like the idea of reading types arbitrarily from files
-    // @ts-ignore
-    const [stage, _setStage] = useState(new Stage(
-        {...DEFAULT_INITIAL, ...InitData},  // InitState
-        {},                                 // ChatState
-        {}                                  // ConfigState
-    ));
+    const [stage, _setStage] = useState(new Stage({}));
 
     // This is what forces the stage node to re-render.
     const [node, setNode] = useState(new Date());
@@ -85,7 +74,7 @@ export const TestStageRunner = ({ factory }: {
         stage.load().then(() => {
             console.info(`Test StageBase Runner load success`);
             runTests().then(() => console.info("Done running tests."));
-        }).catch((err) => {
+        }).catch((err: unknown) => {
             console.error(`Error from stage during load:`, err);
         });
     }, []);
