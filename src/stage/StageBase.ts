@@ -1,17 +1,17 @@
-import { StageContext } from "./types";
+import { StageContext, InitState, ChatState, ConfigState } from "./types";
 import { Message, createMessage } from "./Message";
 import { Environment } from "./Environment";
 
 export abstract class StageBase<
-  InitState = any,
-  ChatState = any,
-  MessageState = any,
-  ConfigState = any
+  I extends InitState = InitState,
+  C extends ChatState = ChatState,
+  _M = any,
+  Cfg extends ConfigState = ConfigState
 > {
   ctx: StageContext;
   env: Environment;
 
-  constructor(initial: InitState, chat: ChatState, config: ConfigState) {
+  constructor(initial: I, chat: C, config: Cfg) {
     this.ctx = {
       init: initial,
       chat,
