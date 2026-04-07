@@ -169,6 +169,7 @@ export function checkDualUltimate(
 /**
  * Execute a dual-ultimate. Returns updated copies of the two members
  * with meters drained and exhaustion applied.
+ * Damage is calculated as the sum of participants' max HP × the move's multiplier.
  */
 export function executeDualUltimate(
   memberA: PartyMember,
@@ -191,9 +192,8 @@ export function executeDualUltimate(
     exhaustionTurns: ultimate.exhaustionTurns,
   };
 
-  // Simplified damage: sum relevant stats × multiplier
-  // (In practice the caller supplies actual stat values; here we use HP as proxy)
-  const damage = (memberA.hp + memberB.hp) * ultimate.damageMultiplier;
+  // Damage = combined max HP × move multiplier
+  const damage = (memberA.maxHp + memberB.maxHp) * ultimate.damageMultiplier;
 
   return { a, b, damage };
 }

@@ -542,7 +542,7 @@ export class Stage extends BaseStage {
 
                 {/* Special Meter */}
                 <div style={{ fontSize: '11px', marginTop: '4px' }}>
-                  Special: {'⬛'.repeat(3 - member.specialMeter)}{'🟡'.repeat(member.specialMeter)} ({member.specialMeter}/3)
+                  Special: {'⬛'.repeat(Math.max(0, 3 - Math.min(3, Math.max(0, member.specialMeter))))}{'🟡'.repeat(Math.min(3, Math.max(0, member.specialMeter)))} ({Math.min(3, Math.max(0, member.specialMeter))}/3)
                 </div>
 
                 {/* Respect */}
